@@ -11,6 +11,7 @@ class User {
     constructor() {
         this.id = '';
         this.chat = {date: '', name: '', comment: ''};
+        this.chatValue = {date: '', name: '', comment: ''};
     }
 }
 
@@ -41,9 +42,16 @@ async function connectDeviceAndCacheCharacteristics() {
         await user.chat.name.startNotifications();
         await user.chat.comment.startNotifications();
 
-        user.chat.date.addEventListener('characteristicvaluechanged', handleNotifications);
-        user.chat.name.addEventListener('characteristicvaluechanged', handleNotifications);
-        user.chat.comment.addEventListener('characteristicvaluechanged', handleNotifications);
+        user.chat.date.addEventListener('characteristicvaluechanged', handleDateNotifications);
+        user.chat.name.addEventListener('characteristicvaluechanged', handleNameNotifications);
+        user.chat.comment.addEventListener('characteristicvaluechanged', handleCommentNotifications);
+
+        let dateValue = await user.chat.date.readValue();
+        let nameValue = await user.chat.name.readValue();
+        let commentValue = await user.chat.comment.readValue();
+        user.chatValue.date = decoder.decode(dateValue);
+        user.chatValue.name = decoder.decode(nameValue);
+        user.chatValue.comment = decoder.decode(commentValue);
 
         users.push(user);
 
@@ -55,17 +63,41 @@ async function connectDeviceAndCacheCharacteristics() {
 /* This function will be called when `readValue` resolves and
  * characteristic value changes since `characteristicvaluechanged` event
  * listener has been added. */
-async function handleNotifications(event) {
+function handleDateNotifications(event) {
+    console.log("date");
     let id = event.target.service.device.id;
+    let date = decoder.decode(event.target.value);
     for (var i= 0, len=users.length; i<len; i++) {
         let user = users[i];
         if (user.id == id) {
-            let date = await user.chat.date.readValue();
-            let name = await user.chat.name.readValue();
-            let comment = await user.chat.comment.readValue();
-            date = decoder.decode(date);
-            name = decoder.decode(name);
-            comment = decoder.decode(comment);
+            user.chatValue.date = date;
+        }
+    }
+}
+
+function handleNameNotifications(event) {
+    console.log("name");
+    let id = event.target.service.device.id;
+    let name = decoder.decode(event.target.value);
+    for (var i= 0, len=users.length; i<len; i++) {
+        let user = users[i];
+        if (user.id == id) {
+            user.chatValue.name = name;
+        }
+    }
+}
+
+function handleCommentNotifications(event) {
+    console.log("comment");
+    let id = event.target.service.device.id;
+    let comment = decoder.decode(event.target.value);
+    for (var i= 0, len=users.length; i<len; i++) {
+        let user = users[i];
+        if (user.id == id) {
+            user.chatValue.comment = comment;
+
+            let date = user.chatValue.date;
+            let name = user.chatValue.name;
             addComment(date, name, comment);
         }
     }
