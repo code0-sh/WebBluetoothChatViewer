@@ -7,6 +7,17 @@ let nameUuid = '00001234-0002-1000-8000-00805f9b34fb';
 let commentUuid = '00001234-0003-1000-8000-00805f9b34fb';
 let users = [];
 
+/**
+ * Web Speech API
+ */
+var synthes = new SpeechSynthesisUtterance();
+var voices = window.speechSynthesis.getVoices();
+synthes.voice = voices[7]; // 7:Google 日本人 ja-JP
+synthes.volume = 1.0; // 音量 min 0 ~ max 1
+synthes.rate = 1.0; // 速度 min 0 ~ max 10
+synthes.pitch = 1.0; // 音程 min 0 ~ max 2
+synthes.lang = 'ja-JP'; // en-US or ja-JP
+
 class User {
     constructor() {
         this.id = '';
@@ -99,6 +110,7 @@ function handleCommentNotifications(event) {
             let date = user.chatValue.date;
             let name = user.chatValue.name;
             addComment(date, name, comment);
+            voice(comment);
         }
     }
 }
@@ -147,6 +159,11 @@ function addComment(date, name, comment) {
     // $divに追加
     $div.appendChild($dl);
     document.querySelector('.commentList').append($div);
+}
+
+function voice(comment) {
+    synthes.text = comment;
+    window.speechSynthesis.speak(synthes);
 }
 
 // Begin BLE Scanning
